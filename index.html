@@ -7,16 +7,16 @@
 <style>
 body {
   margin: 0;
-  font-family: Arial;
-  background: linear-gradient(to right, #4facfe, #00f2fe);
+  font-family: 'Segoe UI', Arial;
   display: flex;
-  color: white;
+  background: #f4f7fb;
 }
 
-/* القائمة الجانبية */
+/* القائمة */
 .sidebar {
-  width: 220px;
-  background: rgba(0,0,0,0.2);
+  width: 250px;
+  background: #1e293b;
+  color: white;
   padding: 20px;
   height: 100vh;
 }
@@ -27,7 +27,7 @@ body {
 }
 
 .menu-item {
-  background: rgba(255,255,255,0.2);
+  background: #334155;
   padding: 15px;
   margin-bottom: 15px;
   border-radius: 10px;
@@ -36,22 +36,25 @@ body {
 }
 
 .menu-item:hover {
-  background: rgba(255,255,255,0.4);
+  background: #475569;
+  transform: scale(1.05);
 }
 
-/* المحتوى الرئيسي */
+/* المحتوى */
 .main {
   flex: 1;
+  padding: 50px;
   text-align: center;
-  margin-top: 150px;
 }
 
 h1 {
   font-size: 45px;
+  color: #1e293b;
 }
 
 p {
   font-size: 20px;
+  color: #555;
 }
 </style>
 
@@ -59,7 +62,6 @@ p {
 
 <body>
 
-<!-- القائمة -->
 <div class="sidebar">
   <h2>📚 الأنشطة</h2>
 
@@ -67,10 +69,9 @@ p {
   <div class="menu-item">🔢 أنشطة الرياضيات</div>
 </div>
 
-<!-- المحتوى -->
 <div class="main">
   <h1>🎓 منصة الطلاب</h1>
-  <p>اختر النشاط من القائمة</p>
+  <p>اختر النشاط من القائمة على اليمين</p>
 </div>
 
 </body>
