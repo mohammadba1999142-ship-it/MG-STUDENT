@@ -1,72 +1,75 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>منصة الطلاب</title>
+<meta charset="UTF-8">
+<title>منصة الطلاب</title>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Arial;
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
 
-      /* الخلفية */
-      background-image: url("background.png"); /* غيّر الاسم إذا مختلف */
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      height: 100vh;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: 'Cairo', sans-serif;
 
-    /* محتوى فوق الصورة */
-    .content {
-      background: rgba(255, 255, 255, 0.6);
-      margin: 50px auto;
-      width: 80%;
-      padding: 30px;
-      border-radius: 20px;
-      text-align: center;
-    }
+  background: url("background.png") no-repeat center center fixed;
+  background-size: cover;
+}
 
-    h1 {
-      font-size: 40px;
-      margin-bottom: 10px;
-    }
+/* طبقة خفيفة فوق الصورة */
+.overlay {
+  background-color: rgba(0, 0, 0, 0.4);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-    p {
-      font-size: 20px;
-      color: #333;
-    }
+/* الصندوق */
+.container {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 40px;
+  border-radius: 20px;
+  text-align: center;
+  width: 90%;
+  max-width: 400px;
+}
 
-    /* أزرار */
-    .btn {
-      display: inline-block;
-      margin: 15px;
-      padding: 15px 25px;
-      border-radius: 10px;
-      color: white;
-      text-decoration: none;
-      font-size: 18px;
-    }
+/* العنوان */
+h1 {
+  margin-bottom: 10px;
+}
 
-    .btn-ar {
-      background: #3b82f6;
-    }
+/* الوصف */
+p {
+  margin-bottom: 25px;
+}
 
-    .btn-math {
-      background: #22c55e;
-    }
-  </style>
+/* الزر */
+button {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 15px 25px;
+  font-size: 18px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #45a049;
+}
+</style>
 </head>
 
 <body>
 
-  <div class="content">
-    <h1>منصة الطلاب</h1>
-    <p>تعلم، العب، واكتشف</p>
-
-    <a href="#" class="btn btn-ar">أنشطة اللغة العربية</a>
-    <a href="#" class="btn btn-math">أنشطة الرياضيات</a>
+<div class="overlay">
+  <div class="container">
+    <h1>منصة الطلاب 📚</h1>
+    <p>ابدأ التعلم بطريقة ممتعة</p>
+    <button>ابدأ الآن</button>
   </div>
+</div>
 
 </body>
 </html>
