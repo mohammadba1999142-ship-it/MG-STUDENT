@@ -1,1 +1,77 @@
-<h1>موقعي شغال 🔥</h1>
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>منصة الطلاب</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: linear-gradient(to right, #4facfe, #00f2fe);
+  display: flex;
+  color: white;
+}
+
+/* القائمة الجانبية */
+.sidebar {
+  width: 220px;
+  background: rgba(0,0,0,0.2);
+  padding: 20px;
+  height: 100vh;
+}
+
+.sidebar h2 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.menu-item {
+  background: rgba(255,255,255,0.2);
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.menu-item:hover {
+  background: rgba(255,255,255,0.4);
+}
+
+/* المحتوى الرئيسي */
+.main {
+  flex: 1;
+  text-align: center;
+  margin-top: 150px;
+}
+
+h1 {
+  font-size: 45px;
+}
+
+p {
+  font-size: 20px;
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- القائمة -->
+<div class="sidebar">
+  <h2>📚 الأنشطة</h2>
+
+  <div class="menu-item">📘 أنشطة اللغة العربية</div>
+  <div class="menu-item">🔢 أنشطة الرياضيات</div>
+</div>
+
+<!-- المحتوى -->
+<div class="main">
+  <h1>🎓 منصة الطلاب</h1>
+  <p>اختر النشاط من القائمة</p>
+</div>
+
+</body>
+</html>
