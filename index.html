@@ -4,19 +4,20 @@
 <meta charset="UTF-8">
 <title>MG STUDENT</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+
 <style>
 
 /* ===== الأساسيات ===== */
 body {
   margin: 0;
   font-family: 'Cairo', sans-serif;
+  background-image: url("background.png");
+  background-size: 80%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
- background-image: url("background.png");
-  background-size: 80%;       /* الحجم 80% */
-  background-position: top center;
-  background-repeat: no-repeat; /* ما تتكرر */
-  background-position: center; /* تكون بالنص */
-  background-attachment: fixed; /* تثبت مكانها */
 
 /* ===== النافذة المنبثقة ===== */
 .popup {
@@ -29,6 +30,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 }
 
 .popup-content {
@@ -74,32 +76,33 @@ body {
   color: white;
 }
 
-/* ===== الكروت ===== */
-.container {
-  margin-right: 240px;
-  padding: 50px;
-  text-align: center;
-}
-
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-}
-
-.card {
+/* ===== تسجيل الدخول ===== */
+.login-box {
+  position: fixed;
+  left: 20px;
+  top: 120px;
   background: white;
-  padding: 30px;
+  padding: 20px;
   border-radius: 15px;
-  font-size: 20px;
-  transition: 0.3s;
-  cursor: pointer;
+  width: 220px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
 }
 
-.card:hover {
-  transform: translateY(-10px);
+/* ===== أزرار التمرين ===== */
+.actions {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+}
+
+.actions button {
+  padding: 10px 15px;
+  margin: 5px;
+  border: none;
   background: #2196F3;
   color: white;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 </style>
@@ -111,32 +114,103 @@ body {
 <div class="popup" id="popup">
   <div class="popup-content">
     <h2>👋 مرحباً بك</h2>
-    <p>أهلاً بك في موقع الطالب</p>
     <button onclick="closePopup()">دخول</button>
   </div>
 </div>
 
 <!-- 📌 القائمة الجانبية -->
 <div class="sidebar">
-  <div class="menu-item">🔐 تسجيل الدخول</div>
+  <div class="menu-item" onclick="openLogin()">🔐 تسجيل الدخول</div>
+
+  <!-- يظهر فقط للمعلم -->
+  <div id="teacherPanel" style="display:none;">
+    <div class="menu-item" onclick="showResults()">📊 عرض النتائج</div>
+  </div>
+
   <div class="menu-item">📚 تمارين اللغة العربية</div>
   <div class="menu-item">➗ تمارين الرياضيات</div>
 </div>
 
-<!-- 🎯 الكروت -->
-<div class="container">
-  <h1>اختر القسم</h1>
+<!-- 🟢 صندوق تسجيل الدخول (مخفي بالبداية) -->
+<div id="loginBox" class="login-box" style="display:none;">
+  <h3>تسجيل الدخول</h3>
+  <input type="text" id="username" placeholder="اسم المستخدم">
+  <input type="password" id="password" placeholder="كلمة المرور">
+  <button onclick="login()">دخول</button>
+</div>
 
-  <div class="cards">
-    <div class="card">📚 اللغة العربية</div>
-    <div class="card">➗ الرياضيات</div>
-  </div>
+<!-- 🟡 أزرار تجربة -->
+<div class="actions">
+  <button onclick="saveMark(10)">إنهاء التمرين</button>
 </div>
 
 <script>
+
+// بيانات الطلاب (تجريبية)
+let students = [
+  {name: "ali", pass: "123", marks: []},
+  {name: "sara", pass: "123", marks: []}
+];
+
+let currentStudent = null;
+
+// فتح صندوق تسجيل الدخول
+function openLogin() {
+  document.getElementById("loginBox").style.display = "block";
+}
+
+// تسجيل الدخول
+function login() {
+  let user = document.getElementById("username").value;
+  let pass = document.getElementById("password").value;
+
+  // تسجيل دخول المعلم
+  if(user === "admin" && pass === "1234") {
+    alert("تم تسجيل الدخول كمعلم");
+
+    document.getElementById("teacherPanel").style.display = "block";
+    document.getElementById("loginBox").style.display = "none";
+    return;
+  }
+
+  // تسجيل دخول طالب
+  let found = students.find(s => s.name === user && s.pass === pass);
+
+  if(found){
+    currentStudent = found;
+    alert("تم تسجيل الدخول كطالب");
+    document.getElementById("loginBox").style.display = "none";
+  } else {
+    alert("خطأ في البيانات");
+  }
+}
+
+// حفظ علامة الطالب
+function saveMark(mark){
+  if(currentStudent){
+    currentStudent.marks.push(mark);
+    alert("تم حفظ النتيجة");
+  } else {
+    alert("لازم تسجل دخول كطالب أولاً");
+  }
+}
+
+// عرض نتائج الطلاب (للمعلم فقط)
+function showResults(){
+  let text = "";
+
+  students.forEach(s => {
+    text += s.name + " : " + s.marks.join(", ") + "\n";
+  });
+
+  alert(text || "ما في نتائج بعد");
+}
+
+// إغلاق النافذة
 function closePopup() {
   document.getElementById("popup").style.display = "none";
 }
+
 </script>
 
 </body>
