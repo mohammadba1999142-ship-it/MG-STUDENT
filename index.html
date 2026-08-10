@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MG STUDENT</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
@@ -80,12 +81,33 @@ body {
 .login-box {
   position: fixed;
   left: 20px;
-  top: 120px;
+  top: 100px;
   background: white;
   padding: 20px;
   border-radius: 15px;
-  width: 220px;
+  width: 240px;
   box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  z-index: 500;
+}
+
+.login-box input {
+  width: 100%;
+  padding: 8px;
+  margin: 6px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.login-box button {
+  width: 100%;
+  padding: 10px;
+  background: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 8px;
 }
 
 /* ===== أزرار التمرين ===== */
@@ -120,97 +142,211 @@ body {
 
 <!-- 📌 القائمة الجانبية -->
 <div class="sidebar">
-  <div class="menu-item" onclick="openLogin()">🔐 تسجيل الدخول</div>
+  <div class="menu-item" id="loginMenuItem" onclick="toggleLoginBox()">🔐 تسجيل الدخول</div>
+  
+  <div id="userInfo" style="display:none; padding: 10px; font-weight: bold; color: #2c3e50;"></div>
 
   <!-- يظهر فقط للمعلم -->
   <div id="teacherPanel" style="display:none;">
     <div class="menu-item" onclick="showResults()">📊 عرض النتائج</div>
   </div>
 
-  <div class="menu-item">📚 تمارين اللغة العربية</div>
-  <div class="menu-item">➗ تمارين الرياضيات</div>
+  <div class="menu-item" onclick="location.href='student.html'">📚 تمارين اللغة العربية</div>
+  <div class="menu-item" onclick="location.href='student.html'">➗ تمارين الرياضيات</div>
+  <div class="menu-item" id="logoutBtn" style="display:none; background:#e74c3c; color:white;" onclick="logout()">تسجيل الخروج</div>
 </div>
 
-<!-- 🟢 صندوق تسجيل الدخول (مخفي بالبداية) -->
+<!-- 🟢 صندوق تسجيل الدخول / إنشاء الحساب -->
 <div id="loginBox" class="login-box" style="display:none;">
-  <h3>تسجيل الدخول</h3>
-  <input type="text" id="username" placeholder="اسم المستخدم">
+  <h3 id="formTitle">تسجيل الدخول</h3>
+  
+  <input type="text" id="fullName" placeholder="الاسم الكامل" style="display:none;">
+  <input type="email" id="email" placeholder="البريد الإلكتروني">
   <input type="password" id="password" placeholder="كلمة المرور">
-  <button onclick="login()">دخول</button>
+
+  <button id="authSubmitBtn" onclick="handleAuth()">دخول</button>
+  
+  <p style="font-size: 12px; text-align: center; margin-top: 10px;">
+    <a href="#" id="toggleAuthMode" onclick="toggleAuthMode(event)">ليس لديك حساب؟ أنشئ حساباً جديداً</a>
+  </p>
 </div>
 
 <!-- 🟡 أزرار تجربة -->
 <div class="actions">
-  <button onclick="saveMark(10)">إنهاء التمرين</button>
+  <button onclick="saveMark(10)">إنهاء التمرين (10 درجات)</button>
 </div>
 
-<script>
+<!-- 🌐 ربط مشروع Firebase والجافاسكربت -->
+<script type="module">
+  import { auth, db } from "./firebase-config.js";
+  import { 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    onAuthStateChanged, 
+    signOut 
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { 
+    doc, 
+    setDoc, 
+    getDoc, 
+    collection, 
+    addDoc, 
+    getDocs 
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// بيانات الطلاب (تجريبية)
-let students = [
-  {name: "ali", pass: "123", marks: []},
-  {name: "sara", pass: "123", marks: []}
-];
+  // 🔴 ايميل المعلم المعتمد حصراً (استبدل هذا الإيميل ببريدك الحقيقي)
+  const MY_TEACHER_EMAIL = "teacher@gmail.com";
 
-let currentStudent = null;
+  let currentUserData = null;
+  let isSignUpMode = false;
 
-// فتح صندوق تسجيل الدخول
-function openLogin() {
-  document.getElementById("loginBox").style.display = "block";
-}
+  window.toggleLoginBox = () => {
+    const box = document.getElementById("loginBox");
+    box.style.display = box.style.display === "none" ? "block" : "none";
+  };
 
-// تسجيل الدخول
-function login() {
-  let user = document.getElementById("username").value;
-  let pass = document.getElementById("password").value;
+  window.toggleAuthMode = (e) => {
+    e.preventDefault();
+    isSignUpMode = !isSignUpMode;
+    
+    document.getElementById("formTitle").innerText = isSignUpMode ? "إنشاء حساب جديد" : "تسجيل الدخول";
+    document.getElementById("fullName").style.display = isSignUpMode ? "block" : "none";
+    document.getElementById("authSubmitBtn").innerText = isSignUpMode ? "إنشاء حساب" : "دخول";
+    document.getElementById("toggleAuthMode").innerText = isSignUpMode ? "لديك حساب بالفعل؟ سجل دخولك" : "ليس لديك حساب؟ أنشئ حساباً جديداً";
+  };
 
-  // تسجيل دخول المعلم
-  if(user === "admin" && pass === "1234") {
-    alert("تم تسجيل الدخول كمعلم");
+  // معالجة تسجيل الدخول / إنشاء الحساب
+  window.handleAuth = async () => {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
 
-    document.getElementById("teacherPanel").style.display = "block";
-    document.getElementById("loginBox").style.display = "none";
-    return;
-  }
+    if (!email || !password) {
+      alert("يرجى ملء كافة الحقول!");
+      return;
+    }
 
-  // تسجيل دخول طالب
-  let found = students.find(s => s.name === user && s.pass === pass);
+    try {
+      if (isSignUpMode) {
+        const fullName = document.getElementById("fullName").value;
 
-  if(found){
-    currentStudent = found;
-    alert("تم تسجيل الدخول كطالب");
-    document.getElementById("loginBox").style.display = "none";
-  } else {
-    alert("خطأ في البيانات");
-  }
-}
+        if (!fullName) {
+          alert("يرجى إدخال الاسم الكامل");
+          return;
+        }
 
-// حفظ علامة الطالب
-function saveMark(mark){
-  if(currentStudent){
-    currentStudent.marks.push(mark);
-    alert("تم حفظ النتيجة");
-  } else {
-    alert("لازم تسجل دخول كطالب أولاً");
-  }
-}
+        // تحديد دور الحساب تلقائياً: معلم فقط إذا طابق البريد المحدد، وخلافه تلميذ
+        let role = "student";
+        if (email.toLowerCase() === "mohammadba1999142@gmail.com".toLowerCase()) {
+          role = "teacher";
+        }
 
-// عرض نتائج الطلاب (للمعلم فقط)
-function showResults(){
-  let text = "";
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        
+        // حفظ بيانات المستخدم في Firestore
+        await setDoc(doc(db, "users", userCred.user.uid), {
+          name: fullName,
+          email: email,
+          role: role,
+          createdAt: new Date()
+        });
 
-  students.forEach(s => {
-    text += s.name + " : " + s.marks.join(", ") + "\n";
+        alert("تم إنشاء الحساب بنجاح!");
+      } else {
+        // تسجيل الدخول
+        await signInWithEmailAndPassword(auth, email, password);
+        alert("تم تسجيل الدخول بنجاح!");
+      }
+      
+      document.getElementById("loginBox").style.display = "none";
+    } catch (error) {
+      alert("خطأ: " + error.message);
+    }
+  };
+
+  // مراقبة حالة تسجيل الدخول وتحديث الواجهة تلقائياً
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (userDoc.exists()) {
+        currentUserData = { uid: user.uid, ...userDoc.data() };
+        
+        document.getElementById("loginMenuItem").style.display = "none";
+        document.getElementById("userInfo").style.display = "block";
+        document.getElementById("userInfo").innerText = `مرحباً: ${currentUserData.name} (${currentUserData.role === 'teacher' ? 'معلم' : 'تلميذ'})`;
+        document.getElementById("logoutBtn").style.display = "block";
+
+        if (currentUserData.role === "teacher") {
+          document.getElementById("teacherPanel").style.display = "block";
+        } else {
+          document.getElementById("teacherPanel").style.display = "none";
+        }
+      }
+    } else {
+      currentUserData = null;
+      document.getElementById("loginMenuItem").style.display = "block";
+      document.getElementById("userInfo").style.display = "none";
+      document.getElementById("teacherPanel").style.display = "none";
+      document.getElementById("logoutBtn").style.display = "none";
+    }
   });
 
-  alert(text || "ما في نتائج بعد");
-}
+  // تسجيل الخروج
+  window.logout = async () => {
+    await signOut(auth);
+    alert("تم تسجيل الخروج");
+  };
 
-// إغلاق النافذة
-function closePopup() {
-  document.getElementById("popup").style.display = "none";
-}
+  // حفظ علامة الطالب في قاعدة البيانات
+  window.saveMark = async (mark) => {
+    if (!currentUserData) {
+      alert("لازم تسجل دخول كطالب أولاً");
+      return;
+    }
 
+    if (currentUserData.role !== "student") {
+      alert("المعلم لا يحفظ تمارين الطلاب بهذه الطريقة!");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "results"), {
+        studentId: currentUserData.uid,
+        studentName: currentUserData.name,
+        score: mark + "/10",
+        quizTitle: "تمرين تجريبي",
+        date: new Date()
+      });
+      alert("تم حفظ النتيجة في حسابك وحساب المعلم بنجاح!");
+    } catch (error) {
+      alert("خطأ في حفظ النتيجة: " + error.message);
+    }
+  };
+
+  // عرض نتائج الطلاب (للمعلم فقط)
+  window.showResults = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "results"));
+      let text = "📊 نتائج الطلاب المسجلة:\n\n";
+
+      if (querySnapshot.empty) {
+        alert("ما في نتائج مسجلة بعد");
+        return;
+      }
+
+      querySnapshot.forEach((doc) => {
+        const res = doc.data();
+        text += `👤 ${res.studentName} | التمرين: ${res.quizTitle} | النتيجة: ${res.score}\n`;
+      });
+
+      alert(text);
+    } catch (error) {
+      alert("خطأ في جلب النتائج: " + error.message);
+    }
+  };
+
+  window.closePopup = () => {
+    document.getElementById("popup").style.display = "none";
+  };
 </script>
 
 </body>

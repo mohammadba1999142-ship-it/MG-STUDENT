@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تمرين التلميذ</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; text-align: center; }
+        .quiz-box { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        button { margin: 5px; padding: 10px 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-box">
+    <h2>تمرين الرياضيات ➗</h2>
+    <p>ما هو حاصل ضرب 3 × 8 ؟</p>
+    <button class="opt" data-ans="false">21</button>
+    <button class="opt" data-ans="true">24</button>
+    <button class="opt" data-ans="false">18</button>
+</div>
+
+<script type="module">
+    import { db, auth } from "./firebase-config.js";
+    import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    document.querySelectorAll(".opt").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+            const isCorrect = e.target.getAttribute("data-ans") === "true";
+            const score = isCorrect ? "10/10" : "0/10";
+
+            try {
+                // إرسال النتيجة إلى Firebase
+                await addDoc(collection(db, "results"), {
+                    studentName: "تلميذ تجريبي", // يمكن جلب اسمه من الحساب
+                    quizTitle: "ضرب 3 × 8",
+                    score: score,
+                    date: new Date()
+                });
+
+                alert(isCorrect ? "إجابة صحيحة! أحسنت 🌟" : "حاول مرة أخرى!");
+            } catch (err) {
+                alert("حدث خطأ أثناء حفظ النتيجة.");
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

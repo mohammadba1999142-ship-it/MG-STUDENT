@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تسجيل الدخول - MG Student</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; padding: 40px; display: flex; justify-content: center; }
+        .box { background: white; padding: 30px; border-radius: 10px; width: 100%; max-width: 400px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input, select, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
+        button { background: #3498db; color: white; border: none; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>إنشاء حساب جديد</h2>
+    <input type="text" id="name" placeholder="الاسم الكامل">
+    <input type="email" id="email" placeholder="البريد الإلكتروني">
+    <input type="password" id="password" placeholder="كلمة المرور">
+    
+    <label>نوع الحساب:</label>
+    <select id="role">
+        <option value="student">تلميذ</option>
+        <option value="teacher">معلم</option>
+    </select>
+
+    <button id="registerBtn">تسجيل الحساب</button>
+</div>
+
+<script type="module">
+    import { auth, db } from "./firebase-config.js";
+    import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    document.getElementById("registerBtn").addEventListener("click", async () => {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const name = document.getElementById("name").value;
+        const role = document.getElementById("role").value;
+
+        try {
+            const userCred = await createUserWithEmailAndPassword(auth, email, password);
+            
+            // حفظ دور المستخدم في Firestore
+            await setDoc(doc(db, "users", userCred.user.uid), {
+                name: name,
+                email: email,
+                role: role
+            });
+
+            alert("تم إنشاء الحساب بنجاح!");
+            if(role === "teacher") {
+                window.location.href = "teacher.html";
+            } else {
+                window.location.href = "student.html";
+            }
+        } catch (error) {
+            alert("خطأ: " + error.message);
+        }
+    });
+</script>
+
+</body>
+</html>
