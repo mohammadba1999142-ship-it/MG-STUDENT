@@ -132,20 +132,25 @@ body {
     body {
         background-size: 80%;
         background-position: center;
+        background-repeat: no-repeat;
         background-attachment: fixed;
+        overflow-x: hidden;
     }
 
     /* القائمة الجانبية */
     .sidebar {
-        width: 150px;
+        width: 175px;
+        height: 100vh;
         padding: 10px;
+        box-sizing: border-box;
     }
 
     .menu-item {
         margin: 8px 0;
-        padding: 10px 6px;
+        padding: 11px 6px;
         font-size: 14px;
         text-align: center;
+        border-radius: 10px;
     }
 
     /* معلومات المستخدم */
@@ -157,9 +162,11 @@ body {
     /* صندوق تسجيل الدخول */
     .login-box {
         width: 200px;
+        max-width: calc(100vw - 30px);
         left: 10px;
-        top: 80px;
+        top: 70px;
         padding: 15px;
+        box-sizing: border-box;
     }
 
     .login-box input,
@@ -170,14 +177,16 @@ body {
     /* النافذة الترحيبية */
     .popup-content {
         width: 75%;
+        max-width: 320px;
         padding: 20px;
+        box-sizing: border-box;
     }
 
     .popup-content h2 {
         font-size: 20px;
     }
 
-    /* الأزرار */
+    /* أزرار التمرين */
     .actions {
         left: 10px;
         bottom: 10px;
@@ -186,6 +195,7 @@ body {
     .actions button {
         padding: 8px 10px;
         font-size: 12px;
+        border-radius: 8px;
     }
 }
 </style>
