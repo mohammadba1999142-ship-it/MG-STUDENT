@@ -21,29 +21,84 @@
 
 <script type="module">
     import { db, auth } from "./firebase-config.js";
-    import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import {
+        collection,
+        addDoc,
+        doc,
+        getDoc
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    let currentStudent = null;
+
+    auth.onAuthStateChanged(async (user) => {
+
+        if (!user) {
+            alert("يجب تسجيل الدخول أولاً");
+            window.location.href = "index.html";
+            return;
+        }
+
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+
+        if (!userDoc.exists() || userDoc.data().role !== "student") {
+            alert("هذه الصفحة مخصصة للتلاميذ فقط");
+            window.location.href = "index.html";
+            return;
+        }
+
+        currentStudent = {
+            uid: user.uid,
+            name: userDoc.data().name
+        };
+    });
 
     document.querySelectorAll(".opt").forEach(btn => {
+
         btn.addEventListener("click", async (e) => {
-            const isCorrect = e.target.getAttribute("data-ans") === "true";
+
+            if (!currentStudent) {
+                alert("انتظر حتى يتم تحميل حسابك");
+                return;
+            }
+
+            const isCorrect =
+                e.target.getAttribute("data-ans") === "true";
+
             const score = isCorrect ? "10/10" : "0/10";
 
             try {
-                // إرسال النتيجة إلى Firebase
+
                 await addDoc(collection(db, "results"), {
-                    studentName: "تلميذ تجريبي", // يمكن جلب اسمه من الحساب
+
+                    studentId: currentStudent.uid,
+
+                    studentName: currentStudent.name,
+
                     quizTitle: "ضرب 3 × 8",
+
                     score: score,
+
                     date: new Date()
+
                 });
 
-                alert(isCorrect ? "إجابة صحيحة! أحسنت 🌟" : "حاول مرة أخرى!");
+                alert(
+                    isCorrect
+                        ? "إجابة صحيحة! أحسنت 🌟"
+                        : "حاول مرة أخرى!"
+                );
+
             } catch (err) {
+
+                console.error(err);
+
                 alert("حدث خطأ أثناء حفظ النتيجة.");
+
             }
+
         });
+
     });
 </script>
-
 </body>
 </html>
