@@ -126,7 +126,68 @@ body {
   border-radius: 8px;
   cursor: pointer;
 }
+/* ===== تحسين عرض الموقع على الموبايل ===== */
+@media (max-width: 600px) {
 
+    body {
+        background-size: 80%;
+        background-position: center;
+        background-attachment: fixed;
+    }
+
+    /* القائمة الجانبية */
+    .sidebar {
+        width: 150px;
+        padding: 10px;
+    }
+
+    .menu-item {
+        margin: 8px 0;
+        padding: 10px 6px;
+        font-size: 14px;
+        text-align: center;
+    }
+
+    /* معلومات المستخدم */
+    #userInfo {
+        font-size: 13px;
+        text-align: center;
+    }
+
+    /* صندوق تسجيل الدخول */
+    .login-box {
+        width: 200px;
+        left: 10px;
+        top: 80px;
+        padding: 15px;
+    }
+
+    .login-box input,
+    .login-box button {
+        font-size: 14px;
+    }
+
+    /* النافذة الترحيبية */
+    .popup-content {
+        width: 75%;
+        padding: 20px;
+    }
+
+    .popup-content h2 {
+        font-size: 20px;
+    }
+
+    /* الأزرار */
+    .actions {
+        left: 10px;
+        bottom: 10px;
+    }
+
+    .actions button {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+}
 </style>
 </head>
 
