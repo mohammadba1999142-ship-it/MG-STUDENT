@@ -126,45 +126,60 @@ body {
   border-radius: 8px;
   cursor: pointer;
 }
-/* ===== تحسين عرض الموقع على الموبايل ===== */
+/* ===== تصميم الموبايل ===== */
 @media (max-width: 600px) {
 
     body {
-        background-size: 80%;
-        background-position: center;
+        background-size: 55vw auto;
+        background-position: 27vw 55%;
         background-repeat: no-repeat;
         background-attachment: fixed;
         overflow-x: hidden;
     }
 
-    /* القائمة الجانبية */
+    /* القائمة اليمنى */
     .sidebar {
-        width: 175px;
+        position: fixed;
+        right: 0;
+        top: 0;
+
+        width: 38vw;
         height: 100vh;
+
         padding: 10px;
         box-sizing: border-box;
+
+        background: rgba(255,255,255,0.88);
+
+        box-shadow: -2px 0 10px rgba(0,0,0,0.08);
     }
 
+    /* عناصر القائمة */
     .menu-item {
-        margin: 8px 0;
-        padding: 11px 6px;
-        font-size: 14px;
+        margin: 10px 0;
+        padding: 10px 5px;
+
+        font-size: 13px;
         text-align: center;
+
         border-radius: 10px;
     }
 
     /* معلومات المستخدم */
     #userInfo {
-        font-size: 13px;
+        font-size: 12px;
         text-align: center;
+        word-break: break-word;
     }
 
     /* صندوق تسجيل الدخول */
     .login-box {
-        width: 200px;
-        max-width: calc(100vw - 30px);
+        width: 210px;
+        max-width: calc(100vw - 20px);
+
         left: 10px;
         top: 70px;
+
         padding: 15px;
         box-sizing: border-box;
     }
@@ -186,7 +201,7 @@ body {
         font-size: 20px;
     }
 
-    /* أزرار التمرين */
+    /* زر إنهاء التمرين */
     .actions {
         left: 10px;
         bottom: 10px;
@@ -195,7 +210,6 @@ body {
     .actions button {
         padding: 8px 10px;
         font-size: 12px;
-        border-radius: 8px;
     }
 }
 </style>
