@@ -29,8 +29,25 @@
 </div>
 
 <script type="module">
-    import { db } from "./firebase-config.js";
-    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { db, auth } from "./firebase-config.js";
+    import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+        alert("يجب تسجيل الدخول أولاً");
+        window.location.href = "index.html";
+        return;
+    }
+
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+
+    if (!userDoc.exists() || userDoc.data().role !== "teacher") {
+        alert("ليس لديك صلاحية الدخول إلى لوحة المعلم");
+        window.location.href = "student.html";
+        return;
+    }
+
+    loadResults();
+});
 
     async function loadResults() {
         const querySnapshot = await getDocs(collection(db, "results"));
@@ -47,7 +64,7 @@
         });
     }
 
-    loadResults();
+    
 </script>
 
 </body>
