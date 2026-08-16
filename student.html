@@ -2,25 +2,88 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تمرين التلميذ</title>
+
     <style>
-        body { font-family: sans-serif; padding: 20px; text-align: center; }
-        .quiz-box { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        button { margin: 5px; padding: 10px 20px; cursor: pointer; }
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            text-align: center;
+            background: #f4f7f6;
+        }
+
+        .quiz-box {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            display: inline-block;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .question {
+            font-size: 22px;
+            margin-bottom: 25px;
+        }
+
+        .opt {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 12px;
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            background: #3498db;
+            color: white;
+            font-size: 18px;
+        }
+
+        .opt:hover {
+            background: #2980b9;
+        }
+
+        #feedback {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
     </style>
 </head>
+
 <body>
 
 <div class="quiz-box">
+
     <h2>تمرين الرياضيات ➗</h2>
-    <p>ما هو حاصل ضرب 3 × 8 ؟</p>
-    <button class="opt" data-ans="false">21</button>
-    <button class="opt" data-ans="true">24</button>
-    <button class="opt" data-ans="false">18</button>
+
+    <div class="question">
+        ما هو حاصل ضرب 3 × 8 ؟
+    </div>
+
+    <button class="opt" data-answer="21">21</button>
+    <button class="opt" data-answer="24">24</button>
+    <button class="opt" data-answer="18">18</button>
+
+    <div id="feedback"></div>
+
+    <div id="result"></div>
+
 </div>
 
+
 <script type="module">
+
     import { db, auth } from "./firebase-config.js";
+
     import {
         collection,
         addDoc,
@@ -28,77 +91,391 @@
         getDoc
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+
+    // ==========================================
+    // بيانات التلميذ الحالي
+    // ==========================================
+
     let currentStudent = null;
+
+
+    // ==========================================
+    // بيانات السؤال
+    // ==========================================
+
+    const correctAnswer = "24";
+
+    let attempts = 0;
+
+    let firstAnswer = null;
+
+    let secondAnswer = null;
+
+    let questionFinished = false;
+
+
+    // ==========================================
+    // التحقق من تسجيل دخول التلميذ
+    // ==========================================
 
     auth.onAuthStateChanged(async (user) => {
 
         if (!user) {
+
             alert("يجب تسجيل الدخول أولاً");
+
             window.location.href = "index.html";
+
             return;
         }
 
-        const userDoc = await getDoc(doc(db, "users", user.uid));
+
+        const userDoc = await getDoc(
+            doc(db, "users", user.uid)
+        );
+
 
         if (!userDoc.exists() || userDoc.data().role !== "student") {
+
             alert("هذه الصفحة مخصصة للتلاميذ فقط");
+
             window.location.href = "index.html";
+
             return;
         }
 
+
         currentStudent = {
+
             uid: user.uid,
+
             name: userDoc.data().name
+
         };
+
     });
 
-    document.querySelectorAll(".opt").forEach(btn => {
 
-        btn.addEventListener("click", async (e) => {
+
+    // ==========================================
+    // التعامل مع إجابة التلميذ
+    // ==========================================
+
+    document.querySelectorAll(".opt").forEach(button => {
+
+        button.addEventListener("click", async () => {
+
+
+            // التأكد من تحميل حساب التلميذ
 
             if (!currentStudent) {
+
                 alert("انتظر حتى يتم تحميل حسابك");
+
                 return;
             }
 
-            const isCorrect =
-                e.target.getAttribute("data-ans") === "true";
 
-            const score = isCorrect ? "10/10" : "0/10";
+            // منع الإجابة بعد انتهاء السؤال
 
-            try {
+            if (questionFinished) {
 
-                await addDoc(collection(db, "results"), {
+                return;
+            }
 
-                    studentId: currentStudent.uid,
 
-                    studentName: currentStudent.name,
+            const answer = button.dataset.answer;
 
-                    quizTitle: "ضرب 3 × 8",
 
-                    score: score,
+            attempts++;
 
-                    date: new Date()
 
-                });
+            // ==========================================
+            // المحاولة الأولى
+            // ==========================================
 
-                alert(
-                    isCorrect
-                        ? "إجابة صحيحة! أحسنت 🌟"
-                        : "حاول مرة أخرى!"
-                );
+            if (attempts === 1) {
 
-            } catch (err) {
+                firstAnswer = answer;
 
-                console.error(err);
 
-                alert("حدث خطأ أثناء حفظ النتيجة.");
+                // الإجابة صحيحة
+
+                if (answer === correctAnswer) {
+
+                    questionFinished = true;
+
+                    showCorrect();
+
+                    await saveResult(
+                        "10/10",
+                        10
+                    );
+
+                }
+
+
+                // الإجابة خاطئة
+
+                else {
+
+                    showWrong();
+
+                }
+
+            }
+
+
+            // ==========================================
+            // المحاولة الثانية
+            // ==========================================
+
+            else if (attempts === 2) {
+
+                secondAnswer = answer;
+
+                questionFinished = true;
+
+
+                // صحيحة بالمحاولة الثانية
+
+                if (answer === correctAnswer) {
+
+                    showCorrectSecondAttempt();
+
+                    await saveResult(
+                        "10/10",
+                        7
+                    );
+
+                }
+
+
+                // خاطئة بالمحاولة الثانية أيضاً
+
+                else {
+
+                    showFinalWrong();
+
+                    await saveResult(
+                        "0/10",
+                        0
+                    );
+
+                }
 
             }
 
         });
 
     });
+
+
+
+    // ==========================================
+    // التعزيز الصحيح - المحاولة الأولى
+    // ==========================================
+
+    function showCorrect() {
+
+        const feedback =
+            document.getElementById("feedback");
+
+        feedback.innerText =
+            "رائع! أحسنت! وفقك الله 🌟";
+
+        feedback.style.color = "green";
+
+        speak(
+            "رائع! أحسنت! وفقك الله"
+        );
+
+    }
+
+
+
+    // ==========================================
+    // التعزيز الصحيح - المحاولة الثانية
+    // ==========================================
+
+    function showCorrectSecondAttempt() {
+
+        const feedback =
+            document.getElementById("feedback");
+
+        feedback.innerText =
+            "أحسنت! نجحت في المحاولة الثانية 🌟";
+
+        feedback.style.color = "green";
+
+        speak(
+            "أحسنت! نجحت في المحاولة الثانية"
+        );
+
+    }
+
+
+
+    // ==========================================
+    // الخطأ الأول
+    // ==========================================
+
+    function showWrong() {
+
+        const feedback =
+            document.getElementById("feedback");
+
+        feedback.innerText =
+            "حاول مرة أخرى 💪";
+
+        feedback.style.color = "orange";
+
+        speak(
+            "حاول مرة أخرى"
+        );
+
+    }
+
+
+
+    // ==========================================
+    // الخطأ النهائي
+    // ==========================================
+
+    function showFinalWrong() {
+
+        const feedback =
+            document.getElementById("feedback");
+
+        feedback.innerText =
+            "لا بأس، حاول في المرة القادمة 💪";
+
+        feedback.style.color = "red";
+
+        speak(
+            "لا بأس، حاول في المرة القادمة"
+        );
+
+    }
+
+
+
+    // ==========================================
+    // الصوت
+    // ==========================================
+
+    function speak(text) {
+
+        if (!("speechSynthesis" in window)) {
+
+            return;
+
+        }
+
+
+        const speech =
+            new SpeechSynthesisUtterance(text);
+
+
+        speech.lang = "ar-SA";
+
+        speech.rate = 0.9;
+
+        speech.pitch = 1.1;
+
+
+        window.speechSynthesis.speak(speech);
+
+    }
+
+
+
+    // ==========================================
+    // حفظ النتيجة في Firebase
+    // ==========================================
+
+    async function saveResult(score, points) {
+
+        try {
+
+            await addDoc(
+                collection(db, "results"),
+                {
+
+                    studentId:
+                        currentStudent.uid,
+
+                    studentName:
+                        currentStudent.name,
+
+
+                    activityId:
+                        "math_multiplication_001",
+
+                    activityTitle:
+                        "ضرب 3 × 8",
+
+
+                    questionId:
+                        "question_001",
+
+                    questionText:
+                        "ما هو حاصل ضرب 3 × 8 ؟",
+
+
+                    firstAnswer:
+                        firstAnswer,
+
+                    secondAnswer:
+                        secondAnswer,
+
+
+                    attempts:
+                        attempts,
+
+
+                    correctAnswer:
+                        correctAnswer,
+
+
+                    finalCorrect:
+                        secondAnswer === null
+                            ? firstAnswer === correctAnswer
+                            : secondAnswer === correctAnswer,
+
+
+                    score:
+                        score,
+
+
+                    points:
+                        points,
+
+
+                    date:
+                        new Date()
+
+                }
+            );
+
+
+            document.getElementById("result").innerText =
+                `النتيجة: ${score} | النقاط: ${points}`;
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                "حدث خطأ أثناء حفظ النتيجة"
+            );
+
+        }
+
+    }
+
 </script>
+
 </body>
 </html>
