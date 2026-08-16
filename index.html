@@ -406,26 +406,44 @@ body {
   };
 
   // عرض نتائج الطلاب (للمعلم فقط)
-  window.showResults = async () => {
+ window.showResults = async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, "results"));
-      let text = "📊 نتائج الطلاب المسجلة:\n\n";
+        const querySnapshot = await getDocs(collection(db, "results"));
 
-      if (querySnapshot.empty) {
-        alert("ما في نتائج مسجلة بعد");
-        return;
-      }
+        let text = "📊 نتائج الطلاب المسجلة:\n\n";
 
-      querySnapshot.forEach((doc) => {
-        const res = doc.data();
-        text += `👤 ${res.studentName} | التمرين: ${res.quizTitle} | النتيجة: ${res.score}\n`;
-      });
+        if (querySnapshot.empty) {
+            alert("ما في نتائج مسجلة بعد");
+            return;
+        }
 
-      alert(text);
+        querySnapshot.forEach((doc) => {
+
+            const res = doc.data();
+
+            text +=
+                `👤 ${res.studentName || "غير معروف"}\n` +
+                `📝 التمرين: ${res.activityTitle || res.quizTitle || "غير محدد"}\n` +
+                `⭐ النتيجة: ${res.points ?? res.score ?? 0}\n` +
+                `📅 التاريخ: ${
+                    res.date?.toDate
+                    ? res.date.toDate().toLocaleString("ar-SY")
+                    : "غير محدد"
+                }\n` +
+                `----------------------\n`;
+        });
+
+        alert(text);
+
     } catch (error) {
-      alert("خطأ في جلب النتائج: " + error.message);
+
+        alert(
+            "خطأ في جلب النتائج: " +
+            error.message
+        );
+
     }
-  };
+};
 
   window.closePopup = () => {
     document.getElementById("popup").style.display = "none";
