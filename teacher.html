@@ -1,70 +1,956 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
+
     <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>لوحة المعلم</title>
+
+
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #fafafa; }
-        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+
+        body {
+
+            font-family: sans-serif;
+
+            margin: 0;
+
+            padding: 20px;
+
+            background: #f4f7f6;
+
+        }
+
+
+        h1 {
+
+            text-align: center;
+
+            margin-bottom: 25px;
+
+        }
+
+
+        .card {
+
+            background: white;
+
+            padding: 20px;
+
+            border-radius: 15px;
+
+            margin-bottom: 20px;
+
+            box-shadow:
+                0 3px 10px rgba(0,0,0,0.08);
+
+        }
+
+
+        .result-card {
+
+            border: 1px solid #ddd;
+
+            border-radius: 12px;
+
+            padding: 18px;
+
+            margin-bottom: 15px;
+
+            background: #fff;
+
+        }
+
+
+        .student-name {
+
+            font-size: 20px;
+
+            font-weight: bold;
+
+            margin-bottom: 10px;
+
+        }
+
+
+        .info {
+
+            margin: 6px 0;
+
+            color: #555;
+
+        }
+
+
+        .score {
+
+            font-size: 18px;
+
+            font-weight: bold;
+
+            color: #2196F3;
+
+        }
+
+
+        .points {
+
+            font-weight: bold;
+
+            color: #f39c12;
+
+        }
+
+
+        .buttons {
+
+            margin-top: 15px;
+
+            display: flex;
+
+            gap: 10px;
+
+            flex-wrap: wrap;
+
+        }
+
+
+        button {
+
+            border: none;
+
+            padding: 10px 15px;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+            font-weight: bold;
+
+        }
+
+
+        .details-btn {
+
+            background: #2196F3;
+
+            color: white;
+
+        }
+
+
+        .delete-btn {
+
+            background: #e74c3c;
+
+            color: white;
+
+        }
+
+
+        .details {
+
+            display: none;
+
+            margin-top: 20px;
+
+            padding-top: 15px;
+
+            border-top: 1px solid #ddd;
+
+        }
+
+
+        .question {
+
+            background: #f8f9fa;
+
+            border-radius: 10px;
+
+            padding: 15px;
+
+            margin-top: 12px;
+
+        }
+
+
+        .question-title {
+
+            font-weight: bold;
+
+            margin-bottom: 10px;
+
+        }
+
+
+        .correct {
+
+            color: green;
+
+            font-weight: bold;
+
+        }
+
+
+        .wrong {
+
+            color: red;
+
+            font-weight: bold;
+
+        }
+
+
+        .attempt {
+
+            margin: 6px 0;
+
+        }
+
+
+        .empty {
+
+            text-align: center;
+
+            color: #777;
+
+            padding: 30px;
+
+        }
+
+
     </style>
+
 </head>
+
+
 <body>
+
 
 <h1>لوحة تحكم المعلم 👨‍🏫</h1>
 
+
 <div class="card">
-    <h3>نتائج التلاميذ</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>اسم التلميذ</th>
-                <th>التمرين</th>
-                <th>النتيجة</th>
-            </tr>
-        </thead>
-        <tbody id="resultsTable"></tbody>
-    </table>
+
+    <h2>📊 نتائج التلاميذ</h2>
+
+    <div id="resultsTable"></div>
+
 </div>
 
+
+
 <script type="module">
+
+
     import { db, auth } from "./firebase-config.js";
-    import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-auth.onAuthStateChanged(async (user) => {
-    if (!user) {
-        alert("يجب تسجيل الدخول أولاً");
-        window.location.href = "index.html";
-        return;
+
+
+    import {
+
+        collection,
+
+        getDocs,
+
+        doc,
+
+        getDoc,
+
+        deleteDoc
+
     }
 
-    const userDoc = await getDoc(doc(db, "users", user.uid));
+    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    if (!userDoc.exists() || userDoc.data().role !== "teacher") {
-        alert("ليس لديك صلاحية الدخول إلى لوحة المعلم");
-        window.location.href = "student.html";
-        return;
-    }
 
-    loadResults();
-});
+
+    // ==========================================
+    // التحقق من صلاحية المعلم
+    // ==========================================
+
+    auth.onAuthStateChanged(async (user) => {
+
+
+        if (!user) {
+
+            alert("يجب تسجيل الدخول أولاً");
+
+            window.location.href = "index.html";
+
+            return;
+
+        }
+
+
+        try {
+
+
+            const userDoc = await getDoc(
+
+                doc(db, "users", user.uid)
+
+            );
+
+
+            if (
+
+                !userDoc.exists() ||
+
+                userDoc.data().role !== "teacher"
+
+            ) {
+
+                alert(
+                    "ليس لديك صلاحية الدخول إلى لوحة المعلم"
+                );
+
+                window.location.href = "student.html";
+
+                return;
+
+            }
+
+
+            loadResults();
+
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            alert(
+                "حدث خطأ أثناء التحقق من الحساب"
+            );
+
+        }
+
+    });
+
+
+
+    // ==========================================
+    // تحميل النتائج
+    // ==========================================
 
     async function loadResults() {
-        const querySnapshot = await getDocs(collection(db, "results"));
-        const table = document.getElementById("resultsTable");
-        table.innerHTML = "";
-        
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            table.innerHTML += `<tr>
-                <td>${data.studentName}</td>
-                <td>${data.quizTitle}</td>
-                <td>${data.score}</td>
-            </tr>`;
-        });
+
+
+        const container =
+            document.getElementById("resultsTable");
+
+
+        container.innerHTML = "";
+
+
+        try {
+
+
+            const querySnapshot =
+                await getDocs(
+                    collection(db, "results")
+                );
+
+
+            if (querySnapshot.empty) {
+
+                container.innerHTML =
+                    `<div class="empty">
+                        لا توجد نتائج حتى الآن.
+                     </div>`;
+
+                return;
+
+            }
+
+
+            querySnapshot.forEach(
+                (resultDoc) => {
+
+
+                    const data =
+                        resultDoc.data();
+
+
+                    const resultId =
+                        resultDoc.id;
+
+
+                    const date =
+                        formatDate(data.date);
+
+
+                    const card =
+                        document.createElement("div");
+
+
+                    card.className =
+                        "result-card";
+
+
+                    // ==================================
+                    // معلومات النتيجة
+                    // ==================================
+
+                    card.innerHTML = `
+
+                        <div class="student-name">
+
+                            👤 ${data.studentName || "غير معروف"}
+
+                        </div>
+
+
+                        <div class="info">
+
+                            📚 المادة:
+                            ${getSubjectName(data.subject)}
+
+                        </div>
+
+
+                        <div class="info">
+
+                            📝 النشاط:
+                            ${data.activityTitle || "غير معروف"}
+
+                        </div>
+
+
+                        <div class="info">
+
+                            📅 تاريخ الحل:
+                            ${date}
+
+                        </div>
+
+
+                        <div class="info score">
+
+                            ⭐ النتيجة:
+                            ${data.score || "غير محدد"}
+
+                        </div>
+
+
+                        <div class="info points">
+
+                            🏆 النقاط:
+                            ${data.points ?? 0}
+
+                        </div>
+
+
+                        <div class="buttons">
+
+
+                            <button
+                                class="details-btn">
+
+                                🔍 عرض التفاصيل
+
+                            </button>
+
+
+                            <button
+                                class="delete-btn">
+
+                                🗑 حذف النتيجة
+
+                            </button>
+
+
+                        </div>
+
+
+                        <div class="details"></div>
+
+                    `;
+
+
+                    container.appendChild(card);
+
+
+
+                    // ==================================
+                    // زر التفاصيل
+                    // ==================================
+
+                    const detailsButton =
+                        card.querySelector(
+                            ".details-btn"
+                        );
+
+
+                    const detailsBox =
+                        card.querySelector(
+                            ".details"
+                        );
+
+
+                    detailsButton.addEventListener(
+                        "click",
+                        () => {
+
+
+                            if (
+                                detailsBox.style.display
+                                === "block"
+                            ) {
+
+                                detailsBox.style.display =
+                                    "none";
+
+                                detailsButton.innerText =
+                                    "🔍 عرض التفاصيل";
+
+                                return;
+
+                            }
+
+
+                            showDetails(
+                                data,
+                                detailsBox
+                            );
+
+
+                            detailsBox.style.display =
+                                "block";
+
+
+                            detailsButton.innerText =
+                                "🔼 إخفاء التفاصيل";
+
+                        }
+                    );
+
+
+
+                    // ==================================
+                    // زر الحذف
+                    // ==================================
+
+                    const deleteButton =
+                        card.querySelector(
+                            ".delete-btn"
+                        );
+
+
+                    deleteButton.addEventListener(
+                        "click",
+                        async () => {
+
+
+                            const confirmed =
+                                confirm(
+
+                                    `هل أنت متأكد من حذف نتيجة
+${data.studentName || "التلميذ"}
+في نشاط
+${data.activityTitle || "هذا النشاط"}؟`
+
+                                );
+
+
+                            if (!confirmed) {
+
+                                return;
+
+                            }
+
+
+                            try {
+
+
+                                await deleteDoc(
+
+                                    doc(
+                                        db,
+                                        "results",
+                                        resultId
+                                    )
+
+                                );
+
+
+                                alert(
+                                    "تم حذف النتيجة بنجاح"
+                                );
+
+
+                                loadResults();
+
+
+                            }
+
+                            catch (error) {
+
+
+                                console.error(error);
+
+
+                                alert(
+                                    "حدث خطأ أثناء حذف النتيجة"
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+
+        }
+
+        catch (error) {
+
+
+            console.error(error);
+
+
+            container.innerHTML =
+                `<div class="empty">
+
+                    حدث خطأ أثناء تحميل النتائج.
+
+                 </div>`;
+
+        }
+
     }
 
-    
+
+
+    // ==========================================
+    // عرض تفاصيل الأسئلة
+    // ==========================================
+
+    function showDetails(
+        data,
+        detailsBox
+    ) {
+
+
+        detailsBox.innerHTML = "";
+
+
+        if (
+            !data.questions ||
+            data.questions.length === 0
+        ) {
+
+
+            detailsBox.innerHTML = `
+
+                <p>
+
+                    لا توجد تفاصيل للأسئلة
+                    في هذه النتيجة.
+
+                </p>
+
+            `;
+
+
+            return;
+
+        }
+
+
+
+        data.questions.forEach(
+            (question, index) => {
+
+
+                const questionBox =
+                    document.createElement("div");
+
+
+                questionBox.className =
+                    "question";
+
+
+                let firstAnswerHTML = "";
+
+
+                if (
+                    question.firstAnswer !== null &&
+                    question.firstAnswer !== undefined
+                ) {
+
+
+                    const firstCorrect =
+                        question.firstAnswer ===
+                        question.correctAnswer;
+
+
+                    firstAnswerHTML = `
+
+                        <div class="attempt">
+
+                            المحاولة الأولى:
+
+                            <span class="${
+                                firstCorrect
+                                    ? "correct"
+                                    : "wrong"
+                            }">
+
+                                ${question.firstAnswer}
+
+                                ${firstCorrect ? "✅" : "❌"}
+
+                            </span>
+
+                        </div>
+
+                    `;
+
+                }
+
+
+
+                let secondAnswerHTML = "";
+
+
+                if (
+                    question.secondAnswer !== null &&
+                    question.secondAnswer !== undefined
+                ) {
+
+
+                    const secondCorrect =
+                        question.secondAnswer ===
+                        question.correctAnswer;
+
+
+                    secondAnswerHTML = `
+
+                        <div class="attempt">
+
+                            المحاولة الثانية:
+
+                            <span class="${
+                                secondCorrect
+                                    ? "correct"
+                                    : "wrong"
+                            }">
+
+                                ${question.secondAnswer}
+
+                                ${secondCorrect ? "✅" : "❌"}
+
+                            </span>
+
+                        </div>
+
+                    `;
+
+                }
+
+
+
+                const finalCorrect =
+                    question.correct === true;
+
+
+
+                questionBox.innerHTML = `
+
+                    <div class="question-title">
+
+                        السؤال ${index + 1}:
+
+                    </div>
+
+
+                    <div>
+
+                        ${question.questionText}
+
+                    </div>
+
+
+                    ${firstAnswerHTML}
+
+
+                    ${secondAnswerHTML}
+
+
+                    <div class="attempt">
+
+                        الإجابة الصحيحة:
+
+                        <span class="correct">
+
+                            ${question.correctAnswer} ✅
+
+                        </span>
+
+                    </div>
+
+
+                    <div class="attempt">
+
+                        عدد المحاولات:
+
+                        <strong>
+
+                            ${question.attempts}
+
+                        </strong>
+
+                    </div>
+
+
+                    <div class="attempt">
+
+                        النتيجة النهائية:
+
+                        <span class="${
+                            finalCorrect
+                                ? "correct"
+                                : "wrong"
+                        }">
+
+                            ${
+                                finalCorrect
+                                    ? "صحيح ✅"
+                                    : "خطأ ❌"
+                            }
+
+                        </span>
+
+                    </div>
+
+                `;
+
+
+                detailsBox.appendChild(
+                    questionBox
+                );
+
+            }
+        );
+
+    }
+
+
+
+    // ==========================================
+    // تحويل اسم المادة
+    // ==========================================
+
+    function getSubjectName(subject) {
+
+
+        if (subject === "math") {
+
+            return "الرياضيات ➗";
+
+        }
+
+
+        if (subject === "arabic") {
+
+            return "اللغة العربية 📚";
+
+        }
+
+
+        if (subject === "science") {
+
+            return "العلوم 🔬";
+
+        }
+
+
+        if (subject === "english") {
+
+            return "اللغة الإنكليزية 🇬🇧";
+
+        }
+
+
+        return subject || "غير محددة";
+
+    }
+
+
+
+    // ==========================================
+    // تنسيق التاريخ
+    // ==========================================
+
+    function formatDate(dateValue) {
+
+
+        if (!dateValue) {
+
+            return "غير محدد";
+
+        }
+
+
+        try {
+
+
+            let date;
+
+
+            // Firebase Timestamp
+
+            if (
+                typeof dateValue.toDate ===
+                "function"
+            ) {
+
+                date =
+                    dateValue.toDate();
+
+            }
+
+
+            // JavaScript Date
+
+            else {
+
+                date =
+                    new Date(dateValue);
+
+            }
+
+
+            return date.toLocaleString(
+                "ar-SY",
+                {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }
+            );
+
+        }
+
+        catch {
+
+            return "غير محدد";
+
+        }
+
+    }
+
+
 </script>
 
 </body>
