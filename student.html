@@ -18,8 +18,8 @@
             padding: 30px;
             border-radius: 15px;
             display: inline-block;
-            max-width: 500px;
             width: 90%;
+            max-width: 500px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
@@ -43,6 +43,11 @@
 
         .opt:hover {
             background: #2980b9;
+        }
+
+        .opt:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
         }
 
         #feedback {
@@ -93,17 +98,46 @@
 
 
     // ==========================================
-    // بيانات التلميذ الحالي
+    // بيانات النشاط
+    // ==========================================
+
+    const activity = {
+
+        activityId: "math_multiplication_001",
+
+        subject: "math",
+
+        grade: "grade1",
+
+        title: "ضرب 3 × 8",
+
+        questions: [
+
+            {
+                questionId: "question_001",
+
+                text: "ما هو حاصل ضرب 3 × 8 ؟",
+
+                correctAnswer: "24",
+
+                options: ["21", "24", "18"]
+            }
+
+        ]
+
+    };
+
+
+    // ==========================================
+    // بيانات التلميذ
     // ==========================================
 
     let currentStudent = null;
 
 
     // ==========================================
-    // بيانات السؤال
+    // بيانات الإجابات
     // ==========================================
-
-    const correctAnswer = "24";
 
     let attempts = 0;
 
@@ -115,7 +149,7 @@
 
 
     // ==========================================
-    // التحقق من تسجيل دخول التلميذ
+    // التحقق من الحساب
     // ==========================================
 
     auth.onAuthStateChanged(async (user) => {
@@ -130,35 +164,52 @@
         }
 
 
-        const userDoc = await getDoc(
-            doc(db, "users", user.uid)
-        );
+        try {
+
+            const userDoc = await getDoc(
+                doc(db, "users", user.uid)
+            );
 
 
-        if (!userDoc.exists() || userDoc.data().role !== "student") {
+            if (
+                !userDoc.exists() ||
+                userDoc.data().role !== "student"
+            ) {
 
-            alert("هذه الصفحة مخصصة للتلاميذ فقط");
+                alert(
+                    "هذه الصفحة مخصصة للتلاميذ فقط"
+                );
 
-            window.location.href = "index.html";
+                window.location.href = "index.html";
 
-            return;
+                return;
+            }
+
+
+            currentStudent = {
+
+                uid: user.uid,
+
+                name: userDoc.data().name
+
+            };
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                "حدث خطأ أثناء تحميل حسابك"
+            );
+
         }
-
-
-        currentStudent = {
-
-            uid: user.uid,
-
-            name: userDoc.data().name
-
-        };
 
     });
 
 
-
     // ==========================================
-    // التعامل مع إجابة التلميذ
+    // التعامل مع الإجابات
     // ==========================================
 
     document.querySelectorAll(".opt").forEach(button => {
@@ -166,17 +217,15 @@
         button.addEventListener("click", async () => {
 
 
-            // التأكد من تحميل حساب التلميذ
-
             if (!currentStudent) {
 
-                alert("انتظر حتى يتم تحميل حسابك");
+                alert(
+                    "انتظر حتى يتم تحميل حسابك"
+                );
 
                 return;
             }
 
-
-            // منع الإجابة بعد انتهاء السؤال
 
             if (questionFinished) {
 
@@ -184,40 +233,39 @@
             }
 
 
-            const answer = button.dataset.answer;
+            const answer =
+                button.dataset.answer;
 
 
             attempts++;
 
 
-            // ==========================================
+            // ======================================
             // المحاولة الأولى
-            // ==========================================
+            // ======================================
 
             if (attempts === 1) {
 
                 firstAnswer = answer;
 
 
-                // الإجابة صحيحة
-
-                if (answer === correctAnswer) {
+                if (
+                    answer ===
+                    activity.questions[0].correctAnswer
+                ) {
 
                     questionFinished = true;
 
+                    disableButtons();
+
                     showCorrect();
 
-                    await saveResult(
+                    await finishActivity(
                         "10/10",
                         10
                     );
 
-                }
-
-
-                // الإجابة خاطئة
-
-                else {
+                } else {
 
                     showWrong();
 
@@ -226,9 +274,9 @@
             }
 
 
-            // ==========================================
+            // ======================================
             // المحاولة الثانية
-            // ==========================================
+            // ======================================
 
             else if (attempts === 2) {
 
@@ -236,28 +284,26 @@
 
                 questionFinished = true;
 
+                disableButtons();
 
-                // صحيحة بالمحاولة الثانية
 
-                if (answer === correctAnswer) {
+                if (
+                    answer ===
+                    activity.questions[0].correctAnswer
+                ) {
 
-                    showCorrectSecondAttempt();
+                    showCorrectSecond();
 
-                    await saveResult(
+                    await finishActivity(
                         "10/10",
                         7
                     );
 
-                }
-
-
-                // خاطئة بالمحاولة الثانية أيضاً
-
-                else {
+                } else {
 
                     showFinalWrong();
 
-                    await saveResult(
+                    await finishActivity(
                         "0/10",
                         0
                     );
@@ -271,9 +317,25 @@
     });
 
 
+    // ==========================================
+    // تعطيل الأزرار بعد انتهاء السؤال
+    // ==========================================
+
+    function disableButtons() {
+
+        document
+            .querySelectorAll(".opt")
+            .forEach(button => {
+
+                button.disabled = true;
+
+            });
+
+    }
+
 
     // ==========================================
-    // التعزيز الصحيح - المحاولة الأولى
+    // التعزيز
     // ==========================================
 
     function showCorrect() {
@@ -282,23 +344,14 @@
             document.getElementById("feedback");
 
         feedback.innerText =
-            "رائع! أحسنت! وفقك الله 🌟";
+            "رائع! أحسنت! 🌟";
 
         feedback.style.color = "green";
-
-        speak(
-            "رائع! أحسنت! وفقك الله"
-        );
 
     }
 
 
-
-    // ==========================================
-    // التعزيز الصحيح - المحاولة الثانية
-    // ==========================================
-
-    function showCorrectSecondAttempt() {
+    function showCorrectSecond() {
 
         const feedback =
             document.getElementById("feedback");
@@ -308,17 +361,8 @@
 
         feedback.style.color = "green";
 
-        speak(
-            "أحسنت! نجحت في المحاولة الثانية"
-        );
-
     }
 
-
-
-    // ==========================================
-    // الخطأ الأول
-    // ==========================================
 
     function showWrong() {
 
@@ -330,17 +374,8 @@
 
         feedback.style.color = "orange";
 
-        speak(
-            "حاول مرة أخرى"
-        );
-
     }
 
-
-
-    // ==========================================
-    // الخطأ النهائي
-    // ==========================================
 
     function showFinalWrong() {
 
@@ -352,114 +387,125 @@
 
         feedback.style.color = "red";
 
-        speak(
-            "لا بأس، حاول في المرة القادمة"
-        );
-
     }
 
 
-
     // ==========================================
-    // الصوت
-    // ==========================================
-
-    function speak(text) {
-
-        if (!("speechSynthesis" in window)) {
-
-            return;
-
-        }
-
-
-        const speech =
-            new SpeechSynthesisUtterance(text);
-
-
-        speech.lang = "ar-SA";
-
-        speech.rate = 0.9;
-
-        speech.pitch = 1.1;
-
-
-        window.speechSynthesis.speak(speech);
-
-    }
-
-
-
-    // ==========================================
-    // حفظ النتيجة في Firebase
+    // إنهاء النشاط وحفظ التفاصيل
     // ==========================================
 
-    async function saveResult(score, points) {
+    async function finishActivity(
+        score,
+        points
+    ) {
+
+        const question =
+            activity.questions[0];
+
+
+        const finalAnswer =
+            secondAnswer !== null
+                ? secondAnswer
+                : firstAnswer;
+
+
+        const finalCorrect =
+            finalAnswer ===
+            question.correctAnswer;
+
+
+        const questionResult = {
+
+            questionId:
+                question.questionId,
+
+            questionText:
+                question.text,
+
+            correctAnswer:
+                question.correctAnswer,
+
+            firstAnswer:
+                firstAnswer,
+
+            secondAnswer:
+                secondAnswer,
+
+            attempts:
+                attempts,
+
+            finalAnswer:
+                finalAnswer,
+
+            correct:
+                finalCorrect
+
+        };
+
+
+        const activityResult = {
+
+            activityId:
+                activity.activityId,
+
+            subject:
+                activity.subject,
+
+            grade:
+                activity.grade,
+
+            activityTitle:
+                activity.title,
+
+
+            studentId:
+                currentStudent.uid,
+
+            studentName:
+                currentStudent.name,
+
+
+            score:
+                score,
+
+            points:
+                points,
+
+
+            totalQuestions:
+                activity.questions.length,
+
+
+            correctQuestions:
+                finalCorrect ? 1 : 0,
+
+
+            wrongQuestions:
+                finalCorrect ? 0 : 1,
+
+
+            questions: [
+                questionResult
+            ],
+
+
+            date:
+                new Date()
+
+        };
+
 
         try {
 
             await addDoc(
                 collection(db, "results"),
-                {
-
-                    studentId:
-                        currentStudent.uid,
-
-                    studentName:
-                        currentStudent.name,
-
-
-                    activityId:
-                        "math_multiplication_001",
-
-                    activityTitle:
-                        "ضرب 3 × 8",
-
-
-                    questionId:
-                        "question_001",
-
-                    questionText:
-                        "ما هو حاصل ضرب 3 × 8 ؟",
-
-
-                    firstAnswer:
-                        firstAnswer,
-
-                    secondAnswer:
-                        secondAnswer,
-
-
-                    attempts:
-                        attempts,
-
-
-                    correctAnswer:
-                        correctAnswer,
-
-
-                    finalCorrect:
-                        secondAnswer === null
-                            ? firstAnswer === correctAnswer
-                            : secondAnswer === correctAnswer,
-
-
-                    score:
-                        score,
-
-
-                    points:
-                        points,
-
-
-                    date:
-                        new Date()
-
-                }
+                activityResult
             );
 
 
-            document.getElementById("result").innerText =
+            document.getElementById(
+                "result"
+            ).innerText =
                 `النتيجة: ${score} | النقاط: ${points}`;
 
 
